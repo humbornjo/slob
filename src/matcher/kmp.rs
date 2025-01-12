@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 pub struct Kpair {
   pub mark: String,
-  pub lps: Arc<[usize]>,
+  lps: Arc<[usize]>,
 }
 
 pub fn new(mark: &str) -> Kpair {
@@ -12,21 +12,21 @@ pub fn new(mark: &str) -> Kpair {
   }
 }
 
-pub fn do_match(pat: &str, s: &str, lps: Arc<[usize]>) -> (usize, bool) {
+pub fn do_match(k: &Kpair, s: &str) -> (usize, bool) {
   let mut i = 0;
   let mut j = 0;
   while i < s.len() {
-    if pat.bytes().nth(j) == s.bytes().nth(i) {
+    if k.mark.bytes().nth(j) == s.bytes().nth(i) {
       i += 1;
       j += 1;
-      if j == pat.len() {
+      if j == k.mark.len() {
         return (i - j, true);
       }
     } else {
       if j == 0 {
         i += 1;
       } else {
-        j = lps[j - 1];
+        j = k.lps[j - 1];
       }
     }
   }

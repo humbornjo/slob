@@ -18,8 +18,7 @@ impl Slob for TmarkProcessor {
     self.buffer.push_str(chunk);
     while {
       let kpair = &self.kpairs[self.state as usize];
-      let (idx, encore) =
-        kmp::do_match(kpair.mark.as_str(), self.buffer.as_str(), kpair.lps.clone());
+      let (idx, encore) = kmp::do_match(kpair, self.buffer.as_str());
       match idx {
         0 => {}
         _ => {

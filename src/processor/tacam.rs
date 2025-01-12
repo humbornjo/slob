@@ -27,10 +27,10 @@ impl Slob for TacamProcessor {
     let mut parts = vec![];
     self.buffer.push_str(chunk);
     while {
-      let tmark = &self.kpairs[self.state as usize];
+      let kpair = &self.kpairs[self.state as usize];
       let (idx, encore) = match self.state {
         State::StateQuest => aca::do_match(&self.acam, &self.buffer),
-        State::StateMatch => kmp::do_match(tmark.mark.as_str(), &self.buffer, tmark.lps.clone()),
+        State::StateMatch => kmp::do_match(kpair, &self.buffer),
         _ => panic!("Invalid state: {}", self.state),
       };
       match idx {
