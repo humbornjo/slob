@@ -1,6 +1,8 @@
+use crate::{Part, Slob, State};
+
 struct TummyProcessor {}
 
-pub fn new_tummy_processor() -> impl Slob {
+pub fn new() -> impl Slob {
   TummyProcessor {}
 }
 

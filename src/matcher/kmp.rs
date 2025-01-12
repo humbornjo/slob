@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+#[derive(Clone)]
 pub struct Kpair {
   pub mark: String,
   lps: Arc<[usize]>,
@@ -12,7 +13,7 @@ pub fn new(mark: &str) -> Kpair {
   }
 }
 
-pub fn do_match(k: &Kpair, s: &str) -> (usize, bool) {
+pub fn do_match(k: &Kpair, s: &str) -> (usize, Option<String>) {
   let mut i = 0;
   let mut j = 0;
   while i < s.len() {
@@ -20,7 +21,7 @@ pub fn do_match(k: &Kpair, s: &str) -> (usize, bool) {
       i += 1;
       j += 1;
       if j == k.mark.len() {
-        return (i - j, true);
+        return (i - j, Some(k.mark.to_owned()));
       }
     } else {
       if j == 0 {
@@ -30,7 +31,7 @@ pub fn do_match(k: &Kpair, s: &str) -> (usize, bool) {
       }
     }
   }
-  return (i - j, false);
+  return (i - j, None);
 }
 
 pub fn gen_lps(pat: &str) -> Arc<[usize]> {
