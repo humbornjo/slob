@@ -34,7 +34,7 @@ pub fn do_match(k: &Kpair, s: &str) -> (usize, Option<String>) {
   return (i - j, None);
 }
 
-pub fn gen_lps(pat: &str) -> Arc<[usize]> {
+fn gen_lps(pat: &str) -> Arc<[usize]> {
   let mut i = 1;
   let mut j = 0;
   let mut lps = vec![0 as usize; pat.len()];

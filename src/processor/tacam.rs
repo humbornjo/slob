@@ -18,7 +18,7 @@ pub fn new(pairs: Vec<Tpair>) -> impl Slob {
 struct TacamProcessor {
   state: State,
   buffer: String,
-  acam: aca::Acam,
+  acam: aca::Ahoca,
   value: Option<String>,
   kpairs: [kmp::Kpair; 2],
   m2value: HashMap<String, String>,

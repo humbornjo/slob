@@ -2,8 +2,15 @@ use std::{borrow::Borrow, collections::VecDeque};
 
 use crate::Tpair;
 
-pub fn new(pairs: Vec<Tpair>) -> Acam {
-  let mut acam = Acam::default();
+pub fn new(pairs: Vec<Tpair>) -> Ahoca {
+  let mut acam = Ahoca {
+    cnt: 0,
+    span: vec![0],
+    ncnt: vec![0],
+    fail: vec![0],
+    trie: vec![[0; 256]],
+    exist: vec![0],
+  };
   pairs
     .into_iter()
     .for_each(|x| acam.insert(x.smark.borrow()));
@@ -12,41 +19,41 @@ pub fn new(pairs: Vec<Tpair>) -> Acam {
 }
 
 #[derive(Default)]
-pub struct Acam {
+pub struct Ahoca {
   cnt: usize,
+  span: Vec<usize>,
   ncnt: Vec<usize>,
   fail: Vec<usize>,
   trie: Vec<[usize; 256]>,
   exist: Vec<usize>,
-  addup: Vec<usize>,
 }
 
-pub fn do_match(acam: &Acam, chunk: &str) -> (usize, Option<String>) {
+pub fn do_match(acam: &Ahoca, chunk: &str) -> (usize, Option<String>) {
   acam.query(chunk)
 }
 
-impl Acam {
+impl Ahoca {
   fn insert(&mut self, pat: &str) {
     let mut p = 0;
-    let mut span = 0;
+    let mut skip = 0;
     let mut spawn = 0;
     pat.bytes().into_iter().for_each(|x| {
       if self.trie[p][x as usize] == 0 {
         spawn += 1;
         self.cnt += 1;
+        self.span.push(0);
         self.fail.push(0);
         self.ncnt.push(0);
         self.trie.push([0; 256]);
         self.exist.push(0);
-        self.addup.push(0);
         self.trie[p][x as usize] = self.cnt;
       } else {
-        span += 1;
+        skip += 1;
       }
       self.ncnt[p] += 1;
       p = self.trie[p][x as usize];
     });
-    self.addup[p - spawn] = span;
+    self.span[p - spawn] = skip;
     self.exist[p] = pat.len();
   }
 
@@ -55,7 +62,7 @@ impl Acam {
       .exist
       .clone()
       .into_iter()
-      .zip(self.addup.iter_mut())
+      .zip(self.span.iter_mut())
       .fold(0, |acc, (e, aref)| {
         let bak = *aref;
         *aref = acc + e - bak;
@@ -88,15 +95,17 @@ impl Acam {
     let mut t = 0;
     for (i, x) in chunk.bytes().enumerate() {
       t = self.trie[t][x as usize];
-      while t != 0 && self.ncnt[t] == 0 && self.exist[t] == 0 {
-        t = self.fail[t];
-      }
-      if self.exist[t] != 0 {
-        let idx = i - self.exist[t] + 1;
-        return (idx, Some(chunk[idx..=i].to_owned()));
+      while t != 0 && self.ncnt[t] == 0 {
+        match self.exist[t] {
+          0 => t = self.fail[t],
+          _ => {
+            let idx = i - self.exist[t] + 1;
+            return (idx, Some(chunk[idx..=i].to_owned()));
+          }
+        }
       }
     }
-    (chunk.len() + self.addup[t] - t, None)
+    (chunk.len() + self.span[t] - t, None)
   }
 }
 
@@ -116,9 +125,5 @@ mod tests {
     ]);
     let (idx, mark) = acam.query("ohellooabc");
     println!("{}, {}", idx, mark.unwrap_or("empty".to_owned()));
-    println!("ncnt : {:?}, len: {}", acam.ncnt, acam.ncnt.len());
-    println!("fail : {:?}", acam.fail);
-    println!("exist: {:?}", acam.exist);
-    println!("addup: {:?}, len: {}", acam.addup, acam.addup.len());
   }
 }
