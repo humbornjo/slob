@@ -38,32 +38,33 @@ impl Slob for TmarkProcessor {
         }
       }
       match mark {
-        None => {}
+        None => _ = self.buffer.drain(..idx),
         _ => {
           encore = true;
-          if self.state == State::StateQuest {
-            self.value = self.m2value.clone();
+          match self.state {
+            State::StateQuest => {
+              self.value = self.m2value.clone();
+              parts.push(Part {
+                content: "".to_owned(),
+                state: State::StateSmark,
+                value: self.value.clone(),
+              });
+              self.state = State::StateMatch;
+            }
+            State::StateMatch => {
+              self.value = None;
+              parts.push(Part {
+                content: "".to_owned(),
+                state: State::StateEmark,
+                value: self.value.clone(),
+              });
+              self.state = State::StateQuest;
+            }
+            _ => unreachable!(),
           }
-          parts.push(Part {
-            content: "".to_owned(),
-            state: match self.state {
-              State::StateQuest => State::StateSmark,
-              State::StateMatch => State::StateEmark,
-              _ => panic!("Invalid state: {}", self.state),
-            },
-            value: self.value.clone(),
-          });
-          if self.state == State::StateMatch {
-            self.value = None;
-          }
-          self.state = match self.state {
-            State::StateQuest => State::StateMatch,
-            State::StateMatch => State::StateQuest,
-            _ => panic!("Invalid state: {}", self.state),
-          }
+          self.buffer.drain(..idx + kpair.mark.len());
         }
       }
-      self.buffer = self.buffer[idx + (kpair.mark.len() * encore as usize)..].to_owned();
       encore
     } {}
     parts
@@ -101,6 +102,6 @@ mod tests {
     assert_eq!(parts[1].state, State::StateMatch);
     assert_eq!(parts[1].value.clone().unwrap(), "foo");
     assert_eq!(parts[2].state, State::StateEmark);
-    assert_eq!(parts[2].value.clone().unwrap(), "foo");
+    assert_eq!(parts[2].value.clone(), None);
   }
 }

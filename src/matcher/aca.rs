@@ -35,40 +35,25 @@ pub fn do_match(acam: &Ahoca, chunk: &str) -> (usize, Option<String>) {
 impl Ahoca {
   fn insert(&mut self, pat: &str) {
     let mut p = 0;
-    let mut skip = 0;
-    let mut spawn = 0;
+    let mut span = 0;
     pat.bytes().into_iter().for_each(|x| {
+      span += 1;
       if self.trie[p][x as usize] == 0 {
-        spawn += 1;
         self.cnt += 1;
-        self.span.push(0);
+        self.span.push(span);
         self.fail.push(0);
         self.ncnt.push(0);
         self.trie.push([0; 256]);
         self.exist.push(0);
         self.trie[p][x as usize] = self.cnt;
-      } else {
-        skip += 1;
       }
       self.ncnt[p] += 1;
       p = self.trie[p][x as usize];
     });
-    self.span[p - spawn] = skip;
     self.exist[p] = pat.len();
   }
 
   fn build(&mut self) {
-    self
-      .exist
-      .clone()
-      .into_iter()
-      .zip(self.span.iter_mut())
-      .fold(0, |acc, (e, aref)| {
-        let bak = *aref;
-        *aref = acc + e - bak;
-        acc + e - bak
-      });
-
     let mut q = VecDeque::new();
     self.trie[0].into_iter().for_each(|x| {
       if x != 0 {
@@ -99,13 +84,13 @@ impl Ahoca {
         match self.exist[t] {
           0 => t = self.fail[t],
           _ => {
-            let idx = i - self.exist[t] + 1;
+            let idx = i + 1 - self.exist[t];
             return (idx, Some(chunk[idx..=i].to_owned()));
           }
         }
       }
     }
-    (chunk.len() + self.span[t] - t, None)
+    (chunk.len() - self.span[t], None)
   }
 }
 
